@@ -1,14 +1,14 @@
 import type { Transform } from "node:stream";
+import type { Scope } from "@sentry/core";
 import {
   type NodeOptions,
   type SeverityLevel,
+  addBreadcrumb,
   captureException,
   captureMessage,
-  addBreadcrumb,
   getClient,
   init,
 } from "@sentry/node";
-import type { Scope } from "@sentry/core";
 import get from "lodash.get";
 import build from "pino-abstract-transport";
 
@@ -97,7 +97,7 @@ export default async function (initSentryOptions: Partial<PinoSentryOptions>) {
   return build(
     async (
       source: Transform &
-        build.OnUnknown & { errorKey?: string; messageKey?: string }
+        build.OnUnknown & { errorKey?: string; messageKey?: string },
     ) => {
       for await (const obj of source) {
         if (!obj) {
@@ -118,7 +118,7 @@ export default async function (initSentryOptions: Partial<PinoSentryOptions>) {
               });
             } else {
               captureException(deserializePinoError(serializedError), (scope) =>
-                enrichScope(scope, obj)
+                enrichScope(scope, obj),
               );
             }
           } else {
@@ -131,13 +131,13 @@ export default async function (initSentryOptions: Partial<PinoSentryOptions>) {
               });
             } else {
               captureMessage(obj?.[source.messageKey ?? "msg"], (scope) =>
-                enrichScope(scope, obj)
+                enrichScope(scope, obj),
               );
             }
           }
         }
       }
     },
-    { expectPinoConfig: pinoSentryOptions.expectPinoConfig }
+    { expectPinoConfig: pinoSentryOptions.expectPinoConfig },
   );
 }
